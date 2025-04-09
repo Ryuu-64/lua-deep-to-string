@@ -18,5 +18,5 @@ return function(self)
 
     local paramsString = table.concat(params, ", ")
     local addressString = function_address_to_string(self)
-    return string.format("function(%s) %s", paramsString, addressString)
+    return string.format("function(%s):%s", paramsString, addressString)
 end

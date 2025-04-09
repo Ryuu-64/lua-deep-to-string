@@ -31,6 +31,7 @@ table_member_table.foo = {}
 local nested_member_table_to_string = deep_to_string(table_member_table)
 print(nested_member_table_to_string)
 
+--region metatable
 local table_with_empty_metatable = deep_to_string(setmetatable({}, {}))
 print(table_with_empty_metatable)
 
@@ -54,3 +55,19 @@ local table_with_function_metatable = deep_to_string(setmetatable({}, {
     end
 }))
 print(table_with_function_metatable)
+
+local table_with_self_metatable = {}
+local table_with_self_metatable_string = deep_to_string(setmetatable(table_with_self_metatable, table_with_self_metatable))
+print(table_with_self_metatable_string)
+
+local table_with__index = {}
+table_with__index.__index = {
+    foo = 37,
+    bar = 42,
+    fooBar = function()
+        print("foo bar")
+    end
+}
+local table_with__index_string = deep_to_string(table_with__index)
+print(table_with__index_string)
+--endregion

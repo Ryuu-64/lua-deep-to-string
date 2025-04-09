@@ -4,7 +4,7 @@ local line_count = require "org.ryuu.deeptostring.string.line_count"
 local table_address_to_string = require "org.ryuu.deeptostring.table.table_address_to_string"
 local function_deep_to_string = require "org.ryuu.deeptostring.function.function_deep_to_string"
 
-local function GetSortedTableMembers(self)
+local function get_sorted_table_members(self)
     local members = {}
     for k, v in pairs(self) do
         table.insert(members, { field = k, value = v })
@@ -28,28 +28,27 @@ local function table_to_string_without_space(self)
     return "table:" .. table_address_to_string(self)
 end
 
-local function table_self_to_string_without_space(self)
-    return "(" .. table_to_string_without_space(self) .. ")"
-end
-
 local function nested_table_member_deep_to_string(value, member)
-    return table_self_to_string_without_space(value) .. " # nested in:" .. safe_to_string(member.field) .. "\n"
+    return table_to_string_without_space(value) .. " # nested in \"" .. safe_to_string(member.field) .. "\""
 end
 
 local function other_member_deep_to_string(self, field, value)
-    local toString = ": "
+    local to_string = ""
     if field == "__index" and self == value then
-        toString = toString .. "<self reference>"
+        to_string = to_string .. "<self reference>"
     else
-        toString = toString .. safe_to_string(value)
+        to_string = to_string .. safe_to_string(value)
     end
-    toString = toString .. "\n"
-    return toString
+    return to_string
 end
 
 local table_deep_to_string
 
-local function table_member_deep_to_string(field, value, indent, exist_members)
+local function table_member_deep_to_string(field, value, indent, exist_members, self)
+    if value == self then
+        return table_to_string_without_space(self) .. " # self reference"
+    end
+
     local member = try_get_exist_member(exist_members, value)
     if member == nil then
         table.insert(exist_members, { field = field, value = value })
@@ -60,66 +59,59 @@ local function table_member_deep_to_string(field, value, indent, exist_members)
 end
 
 local function members_deep_to_string(self, indent, exist_members)
-    local to_string = ""
-    local members = GetSortedTableMembers(self)
+    local members = get_sorted_table_members(self)
+    local member_string_list = {}
     for i = 1, #members do
         local member = members[i]
         local field = member.field
         local value = member.value
         local value_type = type(value)
-        to_string = to_string .. string.rep(" ", indent) .. safe_to_string(field)
+        local member_string = string.rep(" ", indent) .. safe_to_string(field)
         if value_type == "table" then
-            to_string = to_string .. ": " .. table_member_deep_to_string(field, value, indent, exist_members)
+            member_string = member_string .. ": " .. table_member_deep_to_string(field, value, indent, exist_members, self)
         elseif value_type == "function" then
-            to_string = to_string .. ": " .. function_deep_to_string(value) .. "\n"
+            member_string = member_string .. ": " .. function_deep_to_string(value)
         else
-            to_string = to_string .. other_member_deep_to_string(self, field, value)
+            member_string = member_string .. ": " .. other_member_deep_to_string(self, field, value)
         end
+        table.insert(member_string_list, member_string)
     end
-    return to_string
+    return table.concat(member_string_list, "\n")
 end
 
 local function metatable_deep_to_string(self, indent, exist_members)
-    local toString = ""
-    local self_metatable = getmetatable(self)
-    if self_metatable == nil then
-        return toString
+    local metatable = getmetatable(self)
+    if metatable == nil then
+        return ""
+    elseif metatable == self then
+        return string.rep(" ", indent) .. "metatable: " .. table_to_string_without_space(self) .. " # self reference"
     end
 
-    if type(self_metatable) ~= "table" then
-        if type(self_metatable) == "function" then
-            return string.rep(" ", indent) .. "metatable: " .. function_deep_to_string(self_metatable)
+    if type(metatable) ~= "table" then
+        if type(metatable) == "function" then
+            return string.rep(" ", indent) .. "metatable: " .. function_deep_to_string(metatable)
         else
-            return string.rep(" ", indent) .. "metatable: " .. safe_to_string(self_metatable) .. "\n"
+            return string.rep(" ", indent) .. "metatable: " .. safe_to_string(metatable)
         end
     end
 
-    toString = toString .. string.rep(" ", indent)
-
-    local metatableToString = table_deep_to_string(self_metatable, indent, exist_members)
-    local lineCount = line_count(metatableToString)
-    --endregion
-
+    local to_string = string.rep(" ", indent)
+    local metatable_string = table_deep_to_string(metatable, indent, exist_members)
+    local lineCount = line_count(metatable_string)
+    to_string = to_string .. "metatable:"
     if lineCount == 1 then
-        toString = toString .. "metatable: "
-    else
-        toString = toString .. "metatable:"
+        to_string = to_string .. " "
     end
 
-    if self_metatable == self then
-        toString = toString .. " <self reference>"
-        return toString
-    end
-
-    toString = toString .. metatableToString
-    return toString
+    to_string = to_string .. metatable_string
+    return to_string
 end
 
 table_deep_to_string = function(self, indent, exist_members)
     table.insert(exist_members, { field = "self", value = self })
 
     local final_string = ""
-    local self_string = table_self_to_string_without_space(self)
+    local self_string = table_to_string_without_space(self)
     final_string = final_string .. self_string
     local members_string = members_deep_to_string(
             self, indent + 2, exist_members
@@ -129,9 +121,16 @@ table_deep_to_string = function(self, indent, exist_members)
     )
     if members_string ~= "" or metatable_string ~= "" then
         final_string = final_string .. ":"
+    else
+        return final_string
     end
-    final_string = final_string .. "\n"
-    final_string = final_string .. members_string .. metatable_string
+
+    if members_string ~= "" then
+        final_string = final_string .. "\n" .. members_string
+    end
+    if metatable_string ~= "" then
+        final_string = final_string .. "\n" .. metatable_string
+    end
     return final_string
 end
 
