@@ -3,10 +3,10 @@
 ---@param self any
 ---@return string
 return function(self)
-    local selfToString = tostring(self)
-    if selfToString == nil then
+    local string = tostring(self)
+    if string == nil then
         return "nil"
     end
 
-    return selfToString
+    return string
 end

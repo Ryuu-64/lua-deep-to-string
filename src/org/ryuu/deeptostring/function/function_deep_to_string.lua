@@ -1,4 +1,4 @@
-﻿local GetFunctionAddressString = require "org.ryuu.deeptostring.function.GetFunctionAddressString"
+﻿local function_address_to_string = require "org.ryuu.deeptostring.function.function_address_to_string"
 
 ---
 ---@param self fun:any
@@ -17,6 +17,6 @@ return function(self)
     end
 
     local paramsString = table.concat(params, ", ")
-    local addressString = GetFunctionAddressString(self)
+    local addressString = function_address_to_string(self)
     return string.format("function(%s) %s", paramsString, addressString)
 end
