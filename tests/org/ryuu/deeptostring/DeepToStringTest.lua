@@ -1,4 +1,4 @@
-﻿require "org.ryuu.deeptostring.InitializePackagePathForTests"
+﻿require "InitializePackagePathForTests"
 
 local DeepToString = require "org.ryuu.deeptostring.DeepToString"
 
@@ -37,11 +37,3 @@ local tableWithFunction__metatable = DeepToString.Of(setmetatable({}, {
     end
 }))
 print(tableWithFunction__metatable)
-
-DeepToString.SetIndentSpaceCount(4)
-print(DeepToString.Of(setmetatable({
-        foo = 37,
-        bar = 42
-    },
-    {}
-)))
