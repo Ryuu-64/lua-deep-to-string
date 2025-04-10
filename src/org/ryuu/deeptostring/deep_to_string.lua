@@ -16,5 +16,5 @@ return function(self)
         return function_deep_to_string(self) .. "\n"
     end
 
-    return safe_to_string(self) .. "\n"
+    return safe_to_string(self)
 end

@@ -7,6 +7,7 @@ describe("Safe Tostring Function Test Suite", function()
         assert.equal("nil", safe_to_string(nil))  -- Explicit nil handling
         assert.equal("42", safe_to_string(42))
         assert.equal("true", safe_to_string(true))
+        assert.equal("false", safe_to_string(false))
         assert.matches("function: 0%x+", safe_to_string(function()
         end))  -- Function pattern
     end)
