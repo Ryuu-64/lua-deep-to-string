@@ -1,4 +1,4 @@
-﻿require "InitializePackagePathForTests"
+﻿require "initialize"
 
 local deep_to_string = require "org.ryuu.deeptostring.deep_to_string"
 
@@ -30,6 +30,10 @@ local table_member_table = {}
 table_member_table.foo = {}
 local nested_member_table_to_string = deep_to_string(table_member_table)
 print(nested_member_table_to_string)
+
+local table_nested = { { {} } }
+local table_nested_string = deep_to_string(table_nested)
+print(table_nested_string)
 
 --region metatable
 local table_with_empty_metatable = deep_to_string(setmetatable({}, {}))
@@ -70,4 +74,9 @@ table_with__index.__index = {
 }
 local table_with__index_string = deep_to_string(table_with__index)
 print(table_with__index_string)
+
+local table_with__index_self = {}
+table_with__index_self.__index = table_with__index_self
+local table_with__index_self_string = deep_to_string(table_with__index_self)
+print(table_with__index_self_string)
 --endregion

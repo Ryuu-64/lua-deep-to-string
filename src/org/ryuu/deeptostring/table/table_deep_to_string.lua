@@ -1,6 +1,6 @@
 ﻿local table_member_comparator = require "org.ryuu.deeptostring.table.table_member_comparator"
 local safe_to_string = require "org.ryuu.deeptostring.string.safe_to_string"
-local line_count = require "org.ryuu.deeptostring.string.line_count"
+local get_line_count = require "org.ryuu.deeptostring.string.get_line_count"
 local table_address_to_string = require "org.ryuu.deeptostring.table.table_address_to_string"
 local function_deep_to_string = require "org.ryuu.deeptostring.function.function_deep_to_string"
 
@@ -13,10 +13,10 @@ local function get_sorted_table_members(self)
     return members
 end
 
-local function try_get_exist_member(self, variable)
+local function try_get_exist_member(self, members)
     for i = 1, #self do
         local member = self[i]
-        if variable == member.value then
+        if members == member.value then
             return member
         end
     end
@@ -32,30 +32,20 @@ local function nested_table_member_deep_to_string(value, member)
     return table_to_string_without_space(value) .. " # nested in \"" .. safe_to_string(member.field) .. "\""
 end
 
-local function other_member_deep_to_string(self, field, value)
-    local to_string = ""
-    if field == "__index" and self == value then
-        to_string = to_string .. "<self reference>"
-    else
-        to_string = to_string .. safe_to_string(value)
-    end
-    return to_string
-end
-
 local table_deep_to_string
 
 local function table_member_deep_to_string(field, value, indent, exist_members, self)
-    if value == self then
+    if self == value then
         return table_to_string_without_space(self) .. " # self reference"
     end
 
     local member = try_get_exist_member(exist_members, value)
-    if member == nil then
-        table.insert(exist_members, { field = field, value = value })
-        return table_deep_to_string(value, indent, exist_members)
+    if member ~= nil then
+        return nested_table_member_deep_to_string(value, member)
     end
 
-    return nested_table_member_deep_to_string(value, member)
+    table.insert(exist_members, { field = field, value = value })
+    return table_deep_to_string(value, indent, exist_members)
 end
 
 local function members_deep_to_string(self, indent, exist_members)
@@ -68,11 +58,17 @@ local function members_deep_to_string(self, indent, exist_members)
         local value_type = type(value)
         local member_string = string.rep(" ", indent) .. safe_to_string(field)
         if value_type == "table" then
-            member_string = member_string .. ": " .. table_member_deep_to_string(field, value, indent, exist_members, self)
+            local table_member_string = table_member_deep_to_string(field, value, indent, exist_members, self)
+            member_string = member_string .. ":"
+            local line_count = get_line_count(table_member_string)
+            if line_count == 1 then
+                member_string = member_string .. " "
+            end
+            member_string = member_string .. table_member_string
         elseif value_type == "function" then
             member_string = member_string .. ": " .. function_deep_to_string(value)
         else
-            member_string = member_string .. ": " .. other_member_deep_to_string(self, field, value)
+            member_string = member_string .. ": " .. safe_to_string(value)
         end
         table.insert(member_string_list, member_string)
     end
@@ -97,9 +93,9 @@ local function metatable_deep_to_string(self, indent, exist_members)
 
     local to_string = string.rep(" ", indent)
     local metatable_string = table_deep_to_string(metatable, indent, exist_members)
-    local lineCount = line_count(metatable_string)
+    local line_count = get_line_count(metatable_string)
     to_string = to_string .. "metatable:"
-    if lineCount == 1 then
+    if line_count == 1 then
         to_string = to_string .. " "
     end
 
