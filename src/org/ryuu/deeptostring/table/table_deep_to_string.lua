@@ -45,7 +45,7 @@ local function table_member_deep_to_string(field, value, indent, exist_members, 
     end
 
     table.insert(exist_members, { field = field, value = value })
-    return table_deep_to_string(value, indent, exist_members)
+    return table_deep_to_string(value, indent, exist_members, true)
 end
 
 local function members_deep_to_string(self, indent, exist_members)
@@ -92,7 +92,7 @@ local function metatable_deep_to_string(self, indent, exist_members)
     end
 
     local to_string = string.rep(" ", indent)
-    local metatable_string = table_deep_to_string(metatable, indent, exist_members)
+    local metatable_string = table_deep_to_string(metatable, indent, exist_members, true)
     local line_count = get_line_count(metatable_string)
     to_string = to_string .. "metatable:"
     if line_count == 1 then
@@ -117,7 +117,7 @@ table_deep_to_string = function(self, indent, exist_members, has_parent)
     local metatable_string_line_count = get_line_count(metatable_string)
 
     if members_string_line_count + metatable_string_line_count == 0 then
-        if has_parent then
+        if has_parent == true then
             return table_to_string_without_space(self)
         end
 
