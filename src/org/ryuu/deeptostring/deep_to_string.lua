@@ -9,11 +9,7 @@ return function(self)
 
     local selfType = type(self)
     if selfType == "table" then
-        return table_deep_to_string(self, 0, {}) .. "\n"
-    end
-
-    if selfType == "function" then
-        return function_deep_to_string(self) .. "\n"
+        return table_deep_to_string(self, 0, {})
     end
 
     return safe_to_string(self)
