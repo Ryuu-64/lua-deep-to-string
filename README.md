@@ -1,7 +1,7 @@
 # lua-deep-to-string
 
 ```shell
-busted ./spec/ -o ./busted/outputHandlers/no_output.lua
+busted ./spec/ -o ./busted/outputHandlers/testEndLateWrite.lua
 ```
 
 ```shell
