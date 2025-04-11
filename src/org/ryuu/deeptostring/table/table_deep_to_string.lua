@@ -103,24 +103,29 @@ local function metatable_deep_to_string(self, indent, exist_members)
     return to_string
 end
 
-table_deep_to_string = function(self, indent, exist_members)
+table_deep_to_string = function(self, indent, exist_members, has_parent)
     table.insert(exist_members, { field = "self", value = self })
 
     local final_string = ""
-    local self_string = table_to_string_without_space(self)
-    final_string = final_string .. self_string
     local members_string = members_deep_to_string(
             self, indent + 2, exist_members
     )
     local metatable_string = metatable_deep_to_string(
             self, indent + 2, exist_members
     )
-    if members_string ~= "" or metatable_string ~= "" then
-        final_string = final_string .. ":"
-    else
-        return final_string
+    local members_string_line_count = get_line_count(members_string)
+    local metatable_string_line_count = get_line_count(metatable_string)
+
+    if members_string_line_count + metatable_string_line_count == 0 then
+        if has_parent then
+            return table_to_string_without_space(self)
+        end
+
+        return safe_to_string(self)
     end
 
+    final_string = final_string .. table_to_string_without_space(self)
+    final_string = final_string .. ":"
     if members_string ~= "" then
         final_string = final_string .. "\n" .. members_string
     end
